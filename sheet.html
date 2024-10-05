@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Sheet Operations</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            background-color: #e3f2fd; /* Light Blue background */
+            overflow-x: hidden;
+        }
+
+        .operations {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #fff; /* White background */
+            border-bottom: 1px solid #ddd;
+            padding: 10px;
+            z-index: 1000;
+        }
+
+        .container {
+            max-width: 100%;
+            padding-top: 70px; /* Space for the fixed panel */
+        }
+
+        .sheet-content {
+            overflow-x: auto; /* Allow horizontal scrolling */
+            margin-top: 10px;
+            padding: 20px;
+            background-color: #ffffff; /* White background for content */
+            border-radius: 10px;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            font-size: 14px;
+        }
+
+        table, th, td {
+            border: 1px solid #999; /* Light gray borders to look like Excel cells */
+            text-align: left;
+            padding: 8px;
+        }
+
+        th {
+            background-color: #f0f0f0; /* Light gray background for header row */
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9; /* Light alternate row coloring */
+        }
+
+        /* Other styles for buttons, inputs, etc. can be added here */
+    </style>
+</head>
+<body>
+    <div class="operations">
+        <h1>Operations Panel</h1>
+        <div class="input-box">
+            <label for="primary-column">Select Primary Column:</label>
+            <select id="primary-column">
+                <!-- Options will be dynamically populated -->
+            </select>
+            <label for="column-count">How many columns are you working with?</label>
+            <input type="number" id="column-count" min="1" placeholder="Enter number of columns">
+            <button id="submit-column-count">Submit</button>
+        </div>
+        <div id="column-selection" class="column-selection" style="display: none;">
+            <h2>Select Columns for Operations</h2>
+            <div id="available-columns"></div>
+            <button id="process-columns">Process Selected Columns</button>
+        </div>
+        <div id="null-check-panel" style="display: none;">
+            <h2>Check for Null or Not Null</h2>
+            <div id="null-options"></div>
+            <button id="check-null">Check Nulls</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div id="sheet-content" class="sheet-content">
+            <!-- Excel sheet data will be dynamically populated here -->
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.4/xlsx.full.min.js"></script>
+    <script src="sheet.js"></script>
+</body>
+</html>
