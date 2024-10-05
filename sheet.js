@@ -1,12 +1,41 @@
 let data = []; // This will hold your Excel data
 
+// Function to load and display the Excel data
+async function loadExcelSheet(fileUrl) {
+    try {
+        const response = await fetch(fileUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+        const sheetName = workbook.SheetNames[0]; // Assuming you're using the first sheet
+        const sheet = workbook.Sheets[sheetName];
+        
+        // Convert sheet data to JSON
+        data = XLSX.utils.sheet_to_json(sheet, { defval: null });
+        
+        // Now that the data is loaded, populate the primary column dropdown
+        populatePrimaryColumnDropdown();
+        
+        // Display the sheet
+        displaySheet();
+        
+    } catch (error) {
+        console.error("Error loading Excel sheet:", error);
+    }
+}
+
 // Function to populate the primary column dropdown based on Excel data
 function populatePrimaryColumnDropdown() {
     const primaryColumnSelect = document.getElementById('primary-column');
-    
+    primaryColumnSelect.innerHTML = ''; // Clear any existing options
+
+    if (data.length === 0) {
+        alert("No data available to populate columns.");
+        return;
+    }
+
     // Assuming the first row contains column headers
     const columnNames = Object.keys(data[0]);
-    
+
     columnNames.forEach(col => {
         const option = document.createElement('option');
         option.value = col;
@@ -15,103 +44,18 @@ function populatePrimaryColumnDropdown() {
     });
 }
 
-// When the user submits the number of columns
-document.getElementById('submit-column-count').addEventListener('click', () => {
-    const columnCount = parseInt(document.getElementById('column-count').value);
-    if (!columnCount || columnCount < 1) {
-        alert("Please enter a valid number of columns.");
-        return;
-    }
-
-    // Show the column selection panel
-    document.getElementById('column-selection').style.display = 'block';
-
-    // Generate available columns
-    const availableColumnsDiv = document.getElementById('available-columns');
-    availableColumnsDiv.innerHTML = '';
-
-    // Sample column names for selection (A, B, C)
-    const columnNames = Object.keys(data[0]); // Dynamically get column names
-
-    columnNames.forEach((col) => {
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = col;
-        checkbox.id = `col-${col}`;
-        
-        const label = document.createElement('label');
-        label.htmlFor = `col-${col}`;
-        label.innerText = col;
-
-        availableColumnsDiv.appendChild(checkbox);
-        availableColumnsDiv.appendChild(label);
-        availableColumnsDiv.appendChild(document.createElement('br'));
-    });
-
-    // Populate the primary column dropdown
-    populatePrimaryColumnDropdown();
-});
-
-// When the user processes the selected columns
-document.getElementById('process-columns').addEventListener('click', () => {
-    const selectedColumns = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-
-    if (selectedColumns.length === 0) {
-        alert("Please select at least one column.");
-        return;
-    }
-
-    // Show the null check options
-    document.getElementById('null-check-panel').style.display = 'block';
-
-    const nullOptionsDiv = document.getElementById('null-options');
-    nullOptionsDiv.innerHTML = ''; // Clear previous options
-
-    selectedColumns.forEach((col) => {
-        const optionDiv = document.createElement('div');
-        optionDiv.innerHTML = `
-            <span>Check for Null/Not Null in Column ${col}:</span>
-            <input type="radio" name="null-check-${col}" value="null"> Null
-            <input type="radio" name="null-check-${col}" value="not-null"> Not Null
-        `;
-        nullOptionsDiv.appendChild(optionDiv);
-    });
-});
-
-// When the user checks for null values
-document.getElementById('check-null').addEventListener('click', () => {
-    const resultsDiv = document.getElementById('results');
-    resultsDiv.innerHTML = ''; // Clear previous results
-
-    const selectedColumns = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
-    
-    selectedColumns.forEach((col) => {
-        const selectedOption = document.querySelector(`input[name="null-check-${col}"]:checked`);
-        
-        if (!selectedOption) {
-            alert(`Please select an option for column ${col}.`);
-            return;
-        }
-        
-        const checkType = selectedOption.value;
-        const colData = data.map(row => row[col]).filter(item => item !== undefined);
-
-        let result;
-        if (checkType === 'null') {
-            result = colData.filter(item => item === null);
-        } else {
-            result = colData.filter(item => item !== null);
-        }
-
-        resultsDiv.innerHTML += `<p>Column ${col}: ${checkType} values count: ${result.length}</p>`;
-    });
-});
-
-// Example of populating the sheet content dynamically (using mock data)
+// Function to display the Excel sheet as an HTML table
 function displaySheet() {
     const sheetContentDiv = document.getElementById('sheet-content');
+    sheetContentDiv.innerHTML = ''; // Clear any existing content
+
+    if (data.length === 0) {
+        sheetContentDiv.innerHTML = '<p>No data available</p>';
+        return;
+    }
+
     const table = document.createElement('table');
-    
+
     // Create table headers
     const headerRow = document.createElement('tr');
     Object.keys(data[0]).forEach(header => {
@@ -126,7 +70,7 @@ function displaySheet() {
         const tr = document.createElement('tr');
         Object.values(row).forEach(cell => {
             const td = document.createElement('td');
-            td.textContent = cell === null ? 'NULL' : cell; // Display NULL for null values
+            td.textContent = cell === null ? 'NULL' : cell; // Display 'NULL' for null values
             tr.appendChild(td);
         });
         table.appendChild(tr);
@@ -135,5 +79,8 @@ function displaySheet() {
     sheetContentDiv.appendChild(table);
 }
 
-// Call displaySheet to show data initially
-displaySheet();
+// Load the Excel sheet when the page is loaded (replace with your file URL)
+window.addEventListener('load', () => {
+    const fileUrl = getQueryParam('fileUrl'); // Assuming you get file URL from query params
+    loadExcelSheet(fileUrl);
+});
